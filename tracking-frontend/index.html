@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Track Location</title>
+</head>
+
+<body>
+    <h2>Tracking your location...</h2>
+    <p id="status">Getting location...</p>
+
+    <script>
+        const status = document.getElementById("status");
+        const API_URL = "https://tracking-backend-tyxk.onrender.com";
+
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    const data = {
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude
+                    };
+
+                    fetch(API_URL + "/location", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify(data)
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            status.textContent = "✅ Location sent successfully.";
+                        })
+                        .catch(error => {
+                            console.error("Error sending location:", error);
+                            status.textContent = "❌ Failed to send location to server: " + error;
+                        });
+                },
+                function(error) {
+                    let errorMessage = "";
+                    switch (error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMessage = "🚫 Location access denied by user.";
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMessage = "📡 Location info is unavailable.";
+                            break;
+                        case error.TIMEOUT:
+                            errorMessage = "⏱️ Location request timed out.";
+                            break;
+                        default:
+                            errorMessage = "❗ Unknown error occurred: " + error.message;
+                            break;
+                    }
+                    status.textContent = errorMessage;
+                    console.error("Geolocation error:", error);
+                }
+            );
+        } else {
+            status.textContent = "⚠️ Geolocation is not supported by this browser.";
+        }
+    </script>
+</body>
+
+</html>
